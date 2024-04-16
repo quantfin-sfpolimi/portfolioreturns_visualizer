@@ -15,10 +15,39 @@ from keras.layers import Dense, LSTM, Dropout
 from keras.callbacks import History
 from zlib import crc32
 import re
-
+from urllib.request import urlopen
 import scipy.stats as ss
 
 history = History()  # Ignore, it helps with model_data function
+
+def get_index_data(name):
+    """
+    Returns historical monthly prices of any MSCI index
+
+    Parameters: String
+    - name of the index (separated by spaces, upper/lower case doesn't matter)
+
+    Returns: 
+    - pandas dataframe of monthly data
+    """
+    
+    def createURL(url):
+    	for word in name.split():
+    		if word != 'ex':
+    			word=word.upper()
+    		url += word + "%20"
+    	return url[:-3] + ".csv"
+    
+    try:
+    	url = createURL("https://raw.githubusercontent.com/paolocole/Stock-Indexes-Historical-Data/main/NET/EUR/LARGE_AND_MID_CAP/REGIONS/")
+    	data = urlopen(url)
+    except:
+    	url = createURL("https://raw.githubusercontent.com/paolocole/Stock-Indexes-Historical-Data/main/NET/EUR/LARGE_AND_MID_CAP/COUNTRIES/")
+    	data = urlopen(url)
+    
+    return_data = pd.read_csv(urlopen(url), sep=",", names=["Date", "Value"], skiprows=1)
+    return return_data
+
 
 class PickleHelper:
     def __init__(self, obj):
