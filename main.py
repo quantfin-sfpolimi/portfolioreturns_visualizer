@@ -15,8 +15,8 @@ def get_etf_isin(etf_name):
     with open('very_long_html.txt', 'r') as file:
         data = file.read()
 
-    # NOTA: spesso non trova l'etf a causa di parentesi o altre piccole differenze con justEtf, creare una ricerca
-    #       gerarchica basata su parole chiave (World, S&P 500, ...) piuttosto che cercare con .find()
+    # NOTA: spesso non trova l'etf a causa di parentesi o altre piccole differenze con justEtf, creare una funzione di ricerca
+    #       con gerarchica basata su parole chiave (World, S&P 500, ...) piuttosto che cercare con .find()
     index = data.find(etf_name.upper(),0)
 
     if index == -1:
