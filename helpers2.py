@@ -118,8 +118,9 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
             the year as the index and the returns as the only column.
     '''
     
-    all_stocks = yf.download(portfolio_tickers)['Open']
-
+    portfolio_prices = yf.download(portfolio_tickers)['Open']
+    portfolio_prices.dropna(how='any', inplace=True)
+    
     # <-- Giulio: if the ticker is an ETF, look for its underlying index and TER. Add the TERs (of all assets) to TERs list 
     TERs = [0]*len(portfolio_tickers)
     i = 0
@@ -138,14 +139,7 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
         i+=1
 
     # you now (hopefully) have the ters and index names of all etfs in the portfolio_tickers list
-
-
-    portfolio_prices = pd.DataFrame()
-    for ticker in portfolio_tickers:
-        price = all_stocks[ticker]
-        portfolio_prices[ticker] = price
-
-    portfolio_prices.dropna(how='any', inplace=True)
+    
     all_date = list(portfolio_prices.index)
     current_year = int(str(all_date[0])[:4])
     date=[]
@@ -167,4 +161,3 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
             mean_yield+=stocks_yield.iloc[i][portfolio_tickers[j]]*portfolio_weight[j]
         year_yield.loc[str(date[i])[:4]]=mean_yield*100
     return year_yield
-
