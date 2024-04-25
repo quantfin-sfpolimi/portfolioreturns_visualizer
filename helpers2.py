@@ -181,9 +181,26 @@ def get_index_and_etf_data(portfolio_tickers, index_names):
         portfolio_prices.dropna(axis = 0, how = 'all', inplace = True)
 
         return portfolio_prices
-    
 
-def annual_portfolio_return(portfolio_tickers, portfolio_weight):
+def get_first_date_year(all_date):
+    '''
+    This function, named get_first_date_year, takes as input a list of 
+    dates called all_date. The function returns a list of strings 
+    representing the first dates of each year present in the all_date list.
+    
+    Parameters:
+        - all_date: Time_stamp array
+            List of dates
+    '''
+    current_year = int(str(all_date[0])[:4])
+    date=[]
+    for i in range(0, len(all_date)):
+        if current_year == int(str(all_date[i])[:4]):
+            date.append(str(all_date[i])[:10])
+            current_year+=1
+    return date
+
+def annual_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weight):
     '''
     The function annual_portfolio_return calculates the annual return of 
     a portfolio based on the provided stock symbols and their respective 
@@ -192,6 +209,9 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
     and then calculates the weighted average portfolio return for each year.
     
     Parameters:
+        - portfolio_prices: pandas.DataFrame
+            It's a dataframe that contains the opening prices of stocks, 
+            with tickers as columns and dates as rows.
         - portfolio_tickers: string array
             Array containing the tickers of all assets in the portfolio.
         - portfolio_weight: float array
@@ -201,9 +221,6 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
             DataFrame containing the annual returns (%) of the portfolio with 
             the year as the index and the returns as the only column.
     '''
-    
-    portfolio_prices = yf.download(portfolio_tickers)['Open']
-    portfolio_prices.dropna(how='any', inplace=True)
     
     # <-- Giulio: if the ticker is an ETF, look for its underlying index and TER. Add the TERs (of all assets) to TERs list 
     TERs = [0]*len(portfolio_tickers)
@@ -224,13 +241,8 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
 
     # you now (hopefully) have the ters and index names of all etfs in the portfolio_tickers list
     
-    all_date = list(portfolio_prices.index)
-    current_year = int(str(all_date[0])[:4])
-    date=[]
-    for i in range(0, len(all_date)):
-        if current_year == int(str(all_date[i])[:4]):
-            date.append(str(all_date[i])[:10])
-            current_year+=1
+    all_date=(list(portfolio_prices.index))
+    date = get_first_date_year(all_date)
     
     portfolio_year = pd.DataFrame(columns=portfolio_tickers)
     for i in range(0, len(date)):
@@ -245,3 +257,50 @@ def annual_portfolio_return(portfolio_tickers, portfolio_weight):
             mean_yield+=stocks_yield.iloc[i][portfolio_tickers[j]]*portfolio_weight[j]
         year_yield.loc[str(date[i])[:4]]=mean_yield*100
     return year_yield
+
+def portfolio_value(stocks_prices, portfolio_weight):
+    '''
+        This function, named portfolio_value, calculates the portfolio value 
+        for each date present in the stocks_prices dataframe, using the stock 
+        prices and portfolio weights provided as input.
+        
+        Parameters:
+            - stocks_prices: pandas.DataFrame
+                It's a dataframe that contains the opening prices of stocks, 
+                with tickers as columns and dates as rows.
+            -portfolio_weight: float array
+                Array containing the weights of the various stocks.
+        Return:
+            - portfolio_prices : Dictionary
+                A dictionary containing the portfolio value with corresponding dates as indices.
+
+    '''
+    portfolio_prices={}
+    for index,row in stocks_prices.iterrows():
+        row=list(row)
+        price=0
+        for i in range(len(row)):
+            price+=row[i]*portfolio_weight[i]
+            portfolio_prices[str(index.strftime('%Y-%m-%d'))]=price
+    return portfolio_prices
+    
+def graph_plot(portfolio_prices):
+    
+    '''
+        This function, named graph_plot, generates a representative 
+        graph of the portfolio values based on the dates provided 
+        in the portfolio_prices dictionary.
+        
+        Parameter:
+            - portfolio_prices : Dictionary
+                A dictionary containing the portfolio value with corresponding dates as indices.
+    '''
+
+    all_date=list(portfolio_prices.keys())
+    date=get_first_date_year(all_date)
+    date.append(str(all_date[len(all_date)-1])[:10])
+
+    plt.style.use("ggplot")
+    plt.plot(list(portfolio_prices.keys()), list(portfolio_prices.values()))
+    plt.xticks(date,  rotation=45)
+    plt.show()
