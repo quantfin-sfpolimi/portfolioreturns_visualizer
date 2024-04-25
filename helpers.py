@@ -15,7 +15,6 @@ from keras.layers import Dense, LSTM, Dropout
 from keras.callbacks import History
 from zlib import crc32
 import re
-from urllib.request import urlopen
 import scipy.stats as ss
 
 history = History()  # Ignore, it helps with model_data function
