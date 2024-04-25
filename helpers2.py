@@ -257,7 +257,63 @@ def annual_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weigh
             mean_yield+=stocks_yield.iloc[i][portfolio_tickers[j]]*portfolio_weight[j]
         year_yield.loc[str(date[i])[:4]]=mean_yield*100
     return year_yield
+    
+def monthly_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weight):
+    '''
+    This function outputs a dataframe containing the monthly portfolio return of a list of assets. 
+    Parameters:
+        - portfolio_prices [Dataframe], containing the monthly(!) value of all assets
+        - portfolio_tickers [list of Strings]
+        - portfolio_weight [list of floats]
+    Returns:
+        - month_yield [Dataframe]
+    '''
 
+    date=list(portfolio_prices.index)
+    stocks_yield = portfolio_prices.pct_change().dropna(how='any')
+    month_yield=pd.DataFrame(columns=['Yield'])
+
+    for i in range(len(stocks_yield.index)):
+        mean_yield=0
+        for j in range(len(portfolio_tickers)):
+            mean_yield+=stocks_yield.iloc[i][portfolio_tickers[j]]*portfolio_weight[j]
+        month_yield.loc[str(date[i])[:7]]=mean_yield*100
+    return month_yield
+
+def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, starting_capital, amount, fee, percentage):
+    '''
+    The portfolio_return_pac function outputs a Dataframe with the monthly value of a portfolio built using a PAC (Piano di Accumulo di Capitale) strategy.
+    The user can input a starting_capital (initial amount of money in the portfolio), the amount of money that he/she invests each month and a broker's fee.
+    If the fee is a fixed amount for each new contribution the percentage parameter should be set as False. If the fee is based on a percentage of the
+    contribution the percentage parameter should be set as True.
+    Parameters:
+        - portfolio_prices [Dataframe], containing the monthly(!) value of all assets
+        - portfolio_tickers [list of Strings]
+        - portfolio_weight [list of floats]
+        - starting_capital [int]
+        - amount [int]
+        - fee [int]
+        - percentage [boolean]
+    Returns:
+        - capital_df [Dataframe]
+    '''
+    
+    month_yield = monthly_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weight)
+    capital = starting_capital
+    capital_df = pd.DataFrame(columns=['Capital'])
+    date=list(month_yield.index)
+
+    for i in range(len(date)):
+        if percentage:
+            capital += amount - amount*fee/100
+        else:
+            capital += amount - fee
+
+        capital += month_yield["Yield"].iloc[i]*capital/100
+        capital_df.loc[str(date[i])[:7]] = capital
+
+    return capital_df
+    
 def portfolio_value(stocks_prices, portfolio_weight):
     '''
         This function, named portfolio_value, calculates the portfolio value 
