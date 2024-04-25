@@ -360,3 +360,19 @@ def graph_plot(portfolio_prices):
     plt.plot(list(portfolio_prices.keys()), list(portfolio_prices.values()))
     plt.xticks(date,  rotation=45)
     plt.show()
+
+def MDD(portfolio_prices):
+    '''
+        This function, named MDD (Maximum Drawdown), calculates the maximum 
+        drawdown of a portfolio based on the portfolio prices provided as input.
+        
+        Parameters:
+            - portfolio_prices: Dictionary
+                A dictionary containing the portfolio value with corresponding dates as indices.
+        
+        Return:
+            - float
+                Maximum Drawdown (%)
+    '''
+    value=list(portfolio_prices.values())
+    return ((max(value)-min(value))/max(value))*100
