@@ -1,6 +1,8 @@
 # In questo file sfruttiamo gli helper per prendere un portafogli e mandare a javascript i risultati
 
 from helpers_files.helpers import *
+import time
+import datetime
 
 
 
@@ -14,8 +16,13 @@ initial_amount = 10000.0
 
 stocks_prices = download_prices(tickers, start, end, interval='1mo')
 
+
+# Cambio i timestamp in stringhe per non avere problemi
+# DA FARE
+
+
 # Array con dentro i dataframe degli indici sottostanti, con percentuali mese per mese
-etf_and_indexes = []
+etf_and_indexes = [stocks_prices.pct_change()]
 merge = False
 
 for ticker in stocks_prices.columns:
@@ -27,7 +34,6 @@ for ticker in stocks_prices.columns:
       
     etf_ter = get_ter(isin)
 
-    print(isin)
     index_name = get_index_name(isin)
     index_prices = get_index_price(index_name, ticker)
 
@@ -40,10 +46,13 @@ for ticker in stocks_prices.columns:
     etf_and_indexes.append(index_pct_with_ter)
   
   else:
-    etf_and_indexes.append('not needed')
+    # Quando non servono i dati dell'indice, perchè rientri nella data, metti un df vuoto (con None o altro dava problemi)
+    etf_and_indexes.append(pd.DataFrame())
 
 
+#print(etf_and_indexes)
+#portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
 
-portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
+#print(merge_etf_and_index(etf_and_indexes, start, end))
 
-print(portfolio_performance_df)
+print(stocks_prices)

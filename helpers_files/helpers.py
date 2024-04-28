@@ -55,35 +55,34 @@ def download_prices(tickers, start, end, interval='1mo'):
     return stocks_prices
 
 
-def merge_etf_and_index(arr):
-    #L'elemento 0 è il dataframe iniziale di soli etf/stocks, gli altri elementi sono gli indici
-    reference = arr[0]
-    start_date = reference.index[0]
-    end_date = reference.index[-1]
+def merge_etf_and_index(arr, start_date, end_date):
+    #L'elemento finale è il dataframe iniziale di soli etf/stocks, gli altri elementi sono gli indici
+    portfolio_assets = arr[0]
     for i in range(1, len(arr)):
-        #arr[i] sarà un dataframe i-esimo che contiene solo uno strumento
-        #Taglia le righe del dataframe e prendi solo quelle di interesse
-        arr[i] = arr[i].loc[start_date:end_date]
+        if (arr[i].empty == False): # Se non è vuoto
+            #arr[i] sarà un dataframe i-esimo che contiene solo uno strumento
+            #Taglia le righe del dataframe e prendi solo quelle di interesse
+            arr[i] = arr[i].loc[start_date:end_date]
     
     # Ora invece controlla il df iniziale, per ogni nan lo vai a cercare nel corrispettivo df dell'indice
-    dates = list(reference.index)
-    tickers = list(reference.columns)
-    for ticker_index in range(len(reference.columns)):
+    dates = list(portfolio_assets.index)
+    tickers = list(portfolio_assets.columns)
+    for ticker_index in range(len(tickers)):
         ticker = tickers[ticker_index]
-        indice_attuale_df = arr[ticker_index]
+        current_index_df = arr[ticker_index+1] #+1 perchè il primo abbiamo detto essere il df iniziale
         #Itera ogni indice
         for i in range(1, len(dates)):
             date = dates[i]
             # i itera le date
             # i parte da 1 perchè a i=0 corrisponde sempre NaN, non c'è % per il primo dato non avendo un precedente.
             # Se trova un NaN, va a prenderlo all'indice i-esimo di arr
-            if math.isnan(reference.loc[date][ticker]):
+            if math.isnan(portfolio_assets.loc[date][ticker]):
                 #Sostituisce nan col valore dell'indice
-                reference.loc[date][ticker] = indice_attuale_df.loc[date][ticker]
+                portfolio_assets.loc[date][ticker] = current_index_df.loc[date][ticker]
     
 
-    print(reference)
-    return reference
+    print(portfolio_assets)
+    return portfolio_assets
 
 
 
@@ -116,7 +115,7 @@ def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_v
     """
 
     if merge:
-        df = merge_etf_and_index(df_arr)
+        df = merge_etf_and_index(df_arr, start, end)
 
     # Prendo le date
     dates = list(df.index)
@@ -143,7 +142,7 @@ def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_v
 
         if(i == 0):
             # Quando i==0, pct change è Nan e amount è quello iniziale
-            amount = initial_amount
+            amount = initial_value
         else:
             last_amount = portfolio_performance_df.loc[dates[i-1]]['Amount']
             amount = last_amount + (last_amount * portfolio_pct_change)
