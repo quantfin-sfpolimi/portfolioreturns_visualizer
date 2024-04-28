@@ -78,10 +78,9 @@ def merge_etf_and_index(arr, start_date, end_date):
             # Se trova un NaN, va a prenderlo all'indice i-esimo di arr
             if math.isnan(portfolio_assets.loc[date][ticker]):
                 #Sostituisce nan col valore dell'indice
-                portfolio_assets.loc[date][ticker] = current_index_df.loc[date][ticker]
+                portfolio_assets.at[date, ticker] = current_index_df.at[date, ticker]
     
 
-    print(portfolio_assets)
     return portfolio_assets
 
 

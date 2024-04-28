@@ -18,7 +18,7 @@ stocks_prices = download_prices(tickers, start, end, interval='1mo')
 
 
 # Cambio i timestamp in stringhe per non avere problemi
-# DA FARE
+stocks_prices.index = stocks_prices.index.strftime('%Y-%m-%d')
 
 
 # Array con dentro i dataframe degli indici sottostanti, con percentuali mese per mese
@@ -53,6 +53,6 @@ for ticker in stocks_prices.columns:
 #print(etf_and_indexes)
 #portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
 
-#print(merge_etf_and_index(etf_and_indexes, start, end))
+portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
 
-print(stocks_prices)
+print(portfolio_performance_df)
