@@ -38,7 +38,10 @@ for ticker in stocks_prices.columns:
     index_pct_with_ter = index_pct_with_ter.set_index('Date')
 
     etf_and_indexes.append(index_pct_with_ter)
-    
+  
+  else:
+    etf_and_indexes.append('not needed')
+
 
 
 portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
