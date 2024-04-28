@@ -54,7 +54,42 @@ def download_prices(tickers, start, end, interval='1mo'):
 
     return stocks_prices
 
-def portfolio_performance(tickers, weights, start, end, initial_value, interval='1mo'):
+
+def merge_etf_and_index(arr):
+    #L'elemento 0 è il dataframe iniziale di soli etf/stocks, gli altri elementi sono gli indici
+    reference = arr[0]
+    start_date = reference.index[0]
+    end_date = reference.index[-1]
+    for i in range(1, len(arr)):
+        #arr[i] sarà un dataframe i-esimo che contiene solo uno strumento
+        #Taglia le righe del dataframe e prendi solo quelle di interesse
+        arr[i] = arr[i].loc[start_date:end_date]
+    
+    # Ora invece controlla il df iniziale, per ogni nan lo vai a cercare nel corrispettivo df dell'indice
+    dates = list(reference.index)
+    tickers = list(reference.columns)
+    for ticker_index in range(len(reference.columns)):
+        ticker = tickers[ticker_index]
+        indice_attuale_df = arr[ticker_index]
+        #Itera ogni indice
+        for i in range(1, len(dates)):
+            date = dates[i]
+            # i itera le date
+            # i parte da 1 perchè a i=0 corrisponde sempre NaN, non c'è % per il primo dato non avendo un precedente.
+            # Se trova un NaN, va a prenderlo all'indice i-esimo di arr
+            if math.isnan(reference.loc[date][ticker]):
+                #Sostituisce nan col valore dell'indice
+                reference.loc[date][ticker] = indice_attuale_df.loc[date][ticker]
+    
+
+    print(reference)
+    return reference
+
+
+
+
+
+def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_value, interval='1mo'):
     """
     Calculate the performance of a portfolio over a specified time period.
 
@@ -79,12 +114,12 @@ def portfolio_performance(tickers, weights, start, end, initial_value, interval=
         It includes columns for 'Pct Change' (percentage change) and 'Amount' (portfolio value)
         for each date in the analysis period.
     """
-    
-    # Prendo i prezzi degli assets nel portafoglio
-    stocks_pct_change = download_prices(ticker, start, end).pct_change()
+
+    if merge:
+        df = merge_etf_and_index(df_arr)
 
     # Prendo le date
-    dates = list(stocks_pct_change.index)
+    dates = list(df.index)
 
     #Creo un dataframe che conterrà cambio percentusale e nuovo valore del portafoglio, data per data
     portfolio_performance_df = pd.DataFrame(columns = ['Pct Change', 'Amount'])
@@ -100,7 +135,7 @@ def portfolio_performance(tickers, weights, start, end, initial_value, interval=
 
             # Prendi la pct change di ogni ticker, pesata, e la sommi a quella totale.
             # Essenzialmente sommatoria per i di pctchange_i é weight_i
-            ticker_pct_change = stocks_pct_change.loc[date, ticker]
+            ticker_pct_change = df.loc[date, ticker]
             weighted_pct_change = ticker_pct_change * weight
             portfolio_pct_change += weighted_pct_change
 

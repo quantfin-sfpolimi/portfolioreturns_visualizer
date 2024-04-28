@@ -12,11 +12,16 @@ end = "2020-04-30"
 initial_amount = 10000.0
 
 
-stocks_prices = yf.download(tickers, start=start, end=end, interval = '1mo')['Open']
+stocks_prices = download_prices(tickers, start, end, interval='1mo')
+
+# Array con dentro i dataframe degli indici sottostanti, con percentuali mese per mese
+etf_and_indexes = []
+merge = False
 
 for ticker in stocks_prices.columns:
-
   if math.isnan(stocks_prices.loc[start, ticker]):
+    # Entrando la prima volta dico che dovrà fare il merge, sennò non ci sarebbe bisogno.
+    merge = True 
     name = 'iShares Core MSCI World UCITS ETF USD (Acc)'
     isin = get_etf_isin(name)
       
@@ -29,9 +34,13 @@ for ticker in stocks_prices.columns:
     #Sostituisci alla colonna del prezzo le percentuali
     index_prices[ticker] = index_prices[ticker].pct_change()
 
-    index_prices = apply_ter(index_prices, etf_ter, ticker)
+    index_pct_with_ter = apply_ter(index_prices, etf_ter, ticker)
+    index_pct_with_ter = index_pct_with_ter.set_index('Date')
+
+    etf_and_indexes.append(index_pct_with_ter)
     
-    # merge
 
-print(index_prices)
 
+portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
+
+print(portfolio_performance_df)
