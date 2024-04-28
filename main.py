@@ -29,9 +29,9 @@ for ticker in stocks_prices.columns:
     #Sostituisci alla colonna del prezzo le percentuali
     index_prices[ticker] = index_prices[ticker].pct_change()
 
-
     index_prices = apply_ter(index_prices, etf_ter, ticker)
     
     # merge
 
 print(index_prices)
+

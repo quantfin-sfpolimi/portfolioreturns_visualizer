@@ -15,6 +15,7 @@ from urllib.request import urlopen
 
 
 
+
 def apply_ter(index_df, etf_ter, ticker):
     montly_ter_pct = (etf_ter/12)/100
     dates = list(index_df.index)
