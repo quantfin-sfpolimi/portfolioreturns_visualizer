@@ -6,15 +6,26 @@ import pandas as pd
 import pickle
 import yfinance as yf
 from matplotlib import pyplot as plt
-import seaborn
 import matplotlib.colors
 import re
-import scipy.stats as ss
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import math
+from urllib.request import urlopen
 
-history = History()  # Ignore, it helps with model_data function
+
+
+def apply_ter(index_df, etf_ter, ticker):
+    montly_ter_pct = (etf_ter/12)/100
+    dates = list(index_df.index)
+
+    columns = index_df[ticker]
+    
+    new_df = columns.apply(lambda x: x - montly_ter_pct)
+
+    index_df[ticker] = new_df
+    
+    return index_df
 
 def download_prices(tickers, start, end, interval='1mo'):
     """
@@ -112,7 +123,7 @@ def get_etf_isin(etf_name):
         - isin: String
     '''
 
-    with open('very_long_html.txt', 'r') as file:
+    with open('./helpers_files/very_long_html.txt', 'r') as file:
         data = file.read()
 
     # NOTA: spesso non trova l'etf a causa di parentesi o altre piccole differenze con justEtf, creare una funzione di ricerca
@@ -181,7 +192,7 @@ def get_ter(isin):
     if isin == None:
         return 0
 
-    with open('very_long_html.txt', 'r') as file:
+    with open('./helpers_files/very_long_html.txt', 'r') as file:
         data = file.read() # replace'\n', ''
 
     index = data.find(isin,0)
@@ -216,26 +227,30 @@ def createURL(url, name):
         url += word + "%20"
     return url[:-3] + ".csv"
 
-def get_index_price(name):
-        try:                
-            url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries/", name)
-            price = urlopen(url)
+def get_index_price(name, ticker):
+    try:                
+        url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries/", name)
+        price = urlopen(url)
+    except:
+        try:
+            url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/curvo/", name)
+            response = urlopen(url)
         except:
             try:
-                url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/curvo/", name)
-                price = urlopen(url)
+                url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries_small_cap/", name)
+                response = urlopen(url)
             except:
                 try:
-                    url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries_small_cap/", name)
-                    price = urlopen(url)
-                except:
-                    try:
-                        url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/indexes_gross/", name)
-                        price = urlopen(url)
-                    except:             
-                        url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/regions_small_cap/", name)
-                        price = urlopen(url)
-        return price
+                    url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/indexes_gross/", name)
+                    response = urlopen(url)
+                except:             
+                    url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/regions_small_cap/", name)
+                    response = urlopen(url)
+
+    return_data = pd.read_csv(response, sep=",", names=["Date", ticker], skiprows=1)
+    return_data["Date"] += "-01"
+
+    return return_data
 
 def get_index_and_etf_data(portfolio_tickers, index_names):
         '''
@@ -262,11 +277,8 @@ def get_index_and_etf_data(portfolio_tickers, index_names):
         for i in range(0,len(portfolio_tickers)):
             name = index_names[i]
             if name!="":
-                data = get_index_data(name)
-
                 ticker = portfolio_tickers[i]
-                return_data = pd.read_csv(data, sep=",", names=["Date", ticker], skiprows=1)
-                return_data["Date"] += "-01"
+                data = get_index_price(name, ticker)
 
                 for i in range(0,len(return_data)):
                         return_data.loc[i,"Date"] = datetime.strptime(return_data.loc[i,"Date"], '%Y-%m-%d')
