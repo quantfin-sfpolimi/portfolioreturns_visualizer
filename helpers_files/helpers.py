@@ -12,6 +12,8 @@ import re
 import scipy.stats as ss
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from urllib.request import urlopen
+from datetime import datetime
 import math
 
 history = History()  # Ignore, it helps with model_data function
