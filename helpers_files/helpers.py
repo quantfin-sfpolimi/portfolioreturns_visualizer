@@ -264,26 +264,32 @@ def createURL(url, name):
     return url[:-3] + ".csv"
 
 def get_index_price(name, ticker):
-    try:                
-        url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries/", name)
-        price = urlopen(url)
-    except:
+    '''
+    Given an index name and the ticker of an ETF that tracks it, the function
+    looks for the index data and returns it in a Dataframe format
+    Parameters:
+    - name: String
+    - ticker: String
+    Returns:
+    - return_data: pandas Dataframe
+    '''
+
+    url_list = ["countries/", "curvo/", "countries_small_cap/", "indexes_gross/", "regions_small_cap/"]
+    url_base = "https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/"
+
+    # trying different paths to the find index data
+    for url_end in url_list:
+        url = createURL(url_base + url_end, name)
         try:
-            url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/curvo/", name)
             response = urlopen(url)
         except:
-            try:
-                url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries_small_cap/", name)
-                response = urlopen(url)
-            except:
-                try:
-                    url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/indexes_gross/", name)
-                    response = urlopen(url)
-                except:             
-                    url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/regions_small_cap/", name)
-                    response = urlopen(url)
+            continue
+        break
 
+    # converting the response data to a pandas Dataframe
     return_data = pd.read_csv(response, sep=",", names=["Date", ticker], skiprows=1)
+
+    # yahoo finance date format is "2024-04-01", whereas the index data we have has a "2024-04" format
     return_data["Date"] += "-01"
 
     return return_data
@@ -314,7 +320,7 @@ def get_index_and_etf_data(portfolio_tickers, index_names):
             name = index_names[i]
             if name!="":
                 ticker = portfolio_tickers[i]
-                data = get_index_price(name, ticker)
+                return_data = get_index_price(name, ticker)
 
                 for i in range(0,len(return_data)):
                         return_data.loc[i,"Date"] = datetime.strptime(return_data.loc[i,"Date"], '%Y-%m-%d')
