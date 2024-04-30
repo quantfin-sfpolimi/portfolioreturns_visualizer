@@ -20,7 +20,6 @@ from urllib.request import urlopen
 
 def apply_ter(index_df, etf_ter, ticker):
     montly_ter_pct = (etf_ter/12)/100
-    dates = list(index_df.index)
 
     columns = index_df[ticker]
     
@@ -166,11 +165,13 @@ def get_etf_isin(etf_name):
     #       con gerarchica basata su parole chiave (World, S&P 500, ...) piuttosto che cercare con .find()
     index = data.find(etf_name.upper(),0)
 
+    # se non trova nulla ritorna None
     if index == -1:
         return None
 
     i=0
     isin=""
+    # getting the etf isin by reading from the fourth " symbol up to the fifth " symbol it encounters on the very_long_html file
     while (i<5):
         index+=1
         letter=data[index]
@@ -209,6 +210,7 @@ def get_index_name(isin):
 
     index_name=""
     letter=''
+    # the index name is found before the first . symbol in the text
     while letter!='.':
         index+=1
         letter=html[index]
@@ -376,25 +378,6 @@ def annual_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weigh
             the year as the index and the returns as the only column.
     '''
     
-    # <-- Giulio: if the ticker is an ETF, look for its underlying index and TER. Add the TERs (of all assets) to TERs list 
-    TERs = [0]*len(portfolio_tickers)
-    i = 0
-    for ticker in portfolio_tickers:
-        info = yf.Ticker(ticker).info
-        asset_type = info['quoteType']
-        if asset_type=="ETF":
-            isin = get_etf_isin(info['longName'])
-            if isin != None:
-                index_name = get_index_name(isin) 
-            else:  # sometimes etf name on justetf is abbreviated, sometimes not :/
-                isin = get_etf_isin(info['shortName'])
-                index_name = get_index_name(isin) 
-
-            TERs[i] = get_ter(isin)
-        i+=1
-
-    # you now (hopefully) have the ters and index names of all etfs in the portfolio_tickers list
-    
     all_date=(list(portfolio_prices.index))
     date = get_first_date_year(all_date)
     
@@ -434,7 +417,7 @@ def monthly_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weig
         month_yield.loc[str(date[i])[:7]]=mean_yield*100
     return month_yield
 
-def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, starting_capital, amount, fee, percentage):
+def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, starting_capital, amount, fee, fee_in_percentage):
     '''
     The portfolio_return_pac function outputs a Dataframe with the monthly value of a portfolio built using a PAC (Piano di Accumulo di Capitale) strategy.
     The user can input a starting_capital (initial amount of money in the portfolio), the amount of money that he/she invests each month and a broker's fee.
@@ -452,18 +435,23 @@ def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, 
         - capital_df [Dataframe]
     '''
     
+    # set variables up
     month_yield = monthly_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weight)
     capital = starting_capital
     capital_df = pd.DataFrame(columns=['Capital'])
     date=list(month_yield.index)
 
     for i in range(len(date)):
-        if percentage:
+        # for each month, add the amount variable to the capital and subtract the fee 
+        if fee_in_percentage:
             capital += amount - amount*fee/100
         else:
             capital += amount - fee
 
+        # update the capital variable according to the portfolio performance that month
         capital += month_yield["Yield"].iloc[i]*capital/100
+
+        # then, update the capital_df dataframe by filling the corresponding month with the new capital value
         capital_df.loc[str(date[i])[:7]] = capital
 
     return capital_df
