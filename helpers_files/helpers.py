@@ -1,15 +1,21 @@
+# Libraries used
+import datetime as dt
+import numpy as np
+import os
 import pandas as pd
+import pickle
 import yfinance as yf
+from matplotlib import pyplot as plt
+import matplotlib.colors
+import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-<<<<<<< Updated upstream:helpers2.py
-=======
 from urllib.request import urlopen
 from datetime import datetime
 import math
 from urllib.request import urlopen
 
-#
+
 
 
 def apply_ter(index_df, etf_ter, ticker):
@@ -142,7 +148,6 @@ def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_v
         portfolio_performance_df.loc[date]['Amount'] = amount
 
     return portfolio_performance_df
->>>>>>> Stashed changes:helpers_files/helpers.py
 
 def get_etf_isin(etf_name):
     '''
@@ -153,18 +158,20 @@ def get_etf_isin(etf_name):
         - isin: String
     '''
 
-    with open('very_long_html.txt', 'r') as file:
+    with open('./helpers_files/very_long_html.txt', 'r') as file:
         data = file.read()
 
     # NOTA: spesso non trova l'etf a causa di parentesi o altre piccole differenze con justEtf, creare una funzione di ricerca
     #       con gerarchica basata su parole chiave (World, S&P 500, ...) piuttosto che cercare con .find()
     index = data.find(etf_name.upper(),0)
 
+    # se non trova nulla ritorna None
     if index == -1:
         return None
 
     i=0
     isin=""
+    # getting the etf isin by reading from the fourth " symbol up to the fifth " symbol it encounters on the very_long_html file
     while (i<5):
         index+=1
         letter=data[index]
@@ -195,7 +202,7 @@ def get_index_name(isin):
     options.add_argument("--headless")
     browser = webdriver.Chrome(options=options)
 
-    browser.get(url);
+    browser.get(url)
 
     # get html of justetf page and look for index name
     html=browser.page_source
@@ -203,6 +210,7 @@ def get_index_name(isin):
 
     index_name=""
     letter=''
+    # the index name is found before the first . symbol in the text
     while letter!='.':
         index+=1
         letter=html[index]
@@ -222,7 +230,7 @@ def get_ter(isin):
     if isin == None:
         return 0
 
-    with open('very_long_html.txt', 'r') as file:
+    with open('./helpers_files/very_long_html.txt', 'r') as file:
         data = file.read() # replace'\n', ''
 
     index = data.find(isin,0)
@@ -240,7 +248,7 @@ def get_ter(isin):
     return float(ter)
 
 def createURL(url, name):
-    '''
+    ''' 
     Given a url and name of an index it creates the correspondant url
     Parameters: url, name (Strings)
     Returns: url (String)
@@ -257,26 +265,36 @@ def createURL(url, name):
         url += word + "%20"
     return url[:-3] + ".csv"
 
-def get_index_data(name):
-        try:                
-            url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries/", name)
-            data = urlopen(url)
+def get_index_price(name, ticker):
+    '''
+    Given an index name and the ticker of an ETF that tracks it, the function
+    looks for the index data and returns it in a Dataframe format
+    Parameters:
+    - name: String
+    - ticker: String
+    Returns:
+    - return_data: pandas Dataframe
+    '''
+
+    url_list = ["countries/", "curvo/", "countries_small_cap/", "indexes_gross/", "regions_small_cap/"]
+    url_base = "https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/"
+
+    # trying different paths to the find index data
+    for url_end in url_list:
+        url = createURL(url_base + url_end, name)
+        try:
+            response = urlopen(url)
         except:
-            try:
-                url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/curvo/", name)
-                data = urlopen(url)
-            except:
-                try:
-                    url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/countries_small_cap/", name)
-                    data = urlopen(url)
-                except:
-                    try:
-                        url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/indexes_gross/", name)
-                        data = urlopen(url)
-                    except:             
-                        url = createURL("https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/regions_small_cap/", name)
-                        data = urlopen(url)
-        return data
+            continue
+        break
+
+    # converting the response data to a pandas Dataframe
+    return_data = pd.read_csv(response, sep=",", names=["Date", ticker], skiprows=1)
+
+    # yahoo finance date format is "2024-04-01", whereas the index data we have has a "2024-04" format
+    return_data["Date"] += "-01"
+
+    return return_data
 
 def get_index_and_etf_data(portfolio_tickers, index_names):
         '''
@@ -303,11 +321,8 @@ def get_index_and_etf_data(portfolio_tickers, index_names):
         for i in range(0,len(portfolio_tickers)):
             name = index_names[i]
             if name!="":
-                data = get_index_data(name)
-
                 ticker = portfolio_tickers[i]
-                return_data = pd.read_csv(data, sep=",", names=["Date", ticker], skiprows=1)
-                return_data["Date"] += "-01"
+                return_data = get_index_price(name, ticker)
 
                 for i in range(0,len(return_data)):
                         return_data.loc[i,"Date"] = datetime.strptime(return_data.loc[i,"Date"], '%Y-%m-%d')
@@ -363,25 +378,6 @@ def annual_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weigh
             the year as the index and the returns as the only column.
     '''
     
-    # <-- Giulio: if the ticker is an ETF, look for its underlying index and TER. Add the TERs (of all assets) to TERs list 
-    TERs = [0]*len(portfolio_tickers)
-    i = 0
-    for ticker in portfolio_tickers:
-        info = yf.Ticker(ticker).info
-        asset_type = info['quoteType']
-        if asset_type=="ETF":
-            isin = get_etf_isin(info['longName'])
-            if isin != None:
-                index_name = get_index_name(isin) 
-            else:  # sometimes etf name on justetf is abbreviated, sometimes not :/
-                isin = get_etf_isin(info['shortName'])
-                index_name = get_index_name(isin) 
-
-            TERs[i] = get_ter(isin)
-        i+=1
-
-    # you now (hopefully) have the ters and index names of all etfs in the portfolio_tickers list
-    
     all_date=(list(portfolio_prices.index))
     date = get_first_date_year(all_date)
     
@@ -421,7 +417,7 @@ def monthly_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weig
         month_yield.loc[str(date[i])[:7]]=mean_yield*100
     return month_yield
 
-def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, starting_capital, amount, fee, percentage):
+def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, starting_capital, amount, fee, fee_in_percentage):
     '''
     The portfolio_return_pac function outputs a Dataframe with the monthly value of a portfolio built using a PAC (Piano di Accumulo di Capitale) strategy.
     The user can input a starting_capital (initial amount of money in the portfolio), the amount of money that he/she invests each month and a broker's fee.
@@ -439,18 +435,23 @@ def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, 
         - capital_df [Dataframe]
     '''
     
+    # set variables up
     month_yield = monthly_portfolio_return(portfolio_prices, portfolio_tickers, portfolio_weight)
     capital = starting_capital
     capital_df = pd.DataFrame(columns=['Capital'])
     date=list(month_yield.index)
 
     for i in range(len(date)):
-        if percentage:
+        # for each month, add the amount variable to the capital and subtract the fee 
+        if fee_in_percentage:
             capital += amount - amount*fee/100
         else:
             capital += amount - fee
 
+        # update the capital variable according to the portfolio performance that month
         capital += month_yield["Yield"].iloc[i]*capital/100
+
+        # then, update the capital_df dataframe by filling the corresponding month with the new capital value
         capital_df.loc[str(date[i])[:7]] = capital
 
     return capital_df
@@ -517,3 +518,82 @@ def MDD(portfolio_prices):
     '''
     value=list(portfolio_prices.values())
     return ((max(value)-min(value))/max(value))*100
+
+
+class PickleHelper:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def pickle_dump(self, filename):
+        """
+        Serialize the given object and save it to a file using pickle.
+
+        Parameters:
+        obj:
+            anything, dataset or ML model
+        filename: str
+            The name of the file to which the object will be saved. If the filename
+            does not end with ".pkl", it will be appended automatically.
+
+        Returns:
+        None
+        """
+        if not re.search("^.*\.pkl$", filename):
+            filename += ".pkl"
+
+        file_path = "./pickle_files/" + filename
+        with open(file_path, "wb") as f:
+            pickle.dump(self.obj, f)
+
+    @staticmethod
+    def pickle_load(filename):
+        """
+        Load a serialized object from a file using pickle.
+
+        Parameters:
+        filename: str
+            The name of the file from which the object will be loaded. If the filename
+            does not end with ".pkl", it will be appended automatically.
+
+        Returns:
+        obj: PickleHelper
+            A PickleHelper object with the obj loaded from the file accessible through its .obj attribute 
+        """
+        if not re.search("^.*\.pkl$", filename):
+            filename += ".pkl"
+
+        file_path = "./pickle_files/" + filename
+
+        try:
+            with open(file_path, "rb") as f:
+                pcklHelper = PickleHelper(pickle.load(f))
+            return pcklHelper
+        except FileNotFoundError:
+            print("This file " + file_path + " does not exists")
+            return None
+
+    def clean_df(self, percentage, filename):
+        """
+        Cleans the DataFrame by dropping stocks with NaN values exceeding the given percentage threshold.
+        The cleaned DataFrame is pickled after the operation.
+
+        Parameters:
+        self
+        percentage : float
+            Percentage threshold for NaN values. If greater than 1, it's interpreted as a percentage (e.g., 5 for 5%).
+        
+        Returns:
+        None
+        """
+        if percentage > 1:
+            percentage = percentage / 100
+
+        for ticker in self.tickers:
+            nan_values = self.dataframe[ticker].isnull().values.any()
+            if nan_values:
+                count_nan = self.dataframe[ticker].isnull().sum()
+                if count_nan > (len(self.dataframe) * percentage):
+                    self.dataframe.drop(ticker, axis=1, inplace=True)
+
+        self.dataframe.ffill(axis=1, inplace=True) 
+        PickleHelper(obj=self.dataframe).pickle_dump(filename=filename)
