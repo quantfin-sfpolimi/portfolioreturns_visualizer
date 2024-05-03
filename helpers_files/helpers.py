@@ -13,8 +13,6 @@ from selenium.webdriver.chrome.options import Options
 from urllib.request import urlopen
 from datetime import datetime
 import math
-from urllib.request import urlopen
-
 
 
 
@@ -28,31 +26,6 @@ def apply_ter(index_df, etf_ter, ticker):
     index_df[ticker] = new_df
     
     return index_df
-
-def download_prices(tickers, start, end, interval='1mo'):
-    """
-    Download historical stock prices from Yahoo Finance for the specified tickers and time period.
-
-    Parameters:
-    tickers: list of str
-        List of ticker symbols of the stocks to download prices for.
-    start: str or datetime
-        Start date of the historical data. Can be a string in 'YYYY-MM-DD' format or a datetime object.
-    end: str or datetime
-        End date of the historical data. Can be a string in 'YYYY-MM-DD' format or a datetime object.
-    interval: str, optional
-        Interval for the data. Default is '1mo' (monthly). Other possible values include '1d' (daily),
-        '1wk' (weekly), '1mo' (monthly), etc.
-
-    Returns:
-    stocks_prices: DataFrame
-        DataFrame containing historical stock prices for the specified tickers and time period.
-        The columns represent tickers and the rows represent dates.
-    """
-    stocks_prices = yf.download(tickers, start=start, end=end, interval=interval)['Open']
-
-    return stocks_prices
-
 
 def merge_etf_and_index(arr, start_date, end_date):
     #L'elemento finale è il dataframe iniziale di soli etf/stocks, gli altri elementi sono gli indici
@@ -81,10 +54,6 @@ def merge_etf_and_index(arr, start_date, end_date):
     
 
     return portfolio_assets
-
-
-
-
 
 def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_value, interval='1mo'):
     """
@@ -265,7 +234,7 @@ def createURL(url, name):
         url += word + "%20"
     return url[:-3] + ".csv"
 
-def get_index_price(name, ticker):
+def get_index_prices(name, ticker):
     '''
     Given an index name and the ticker of an ETF that tracks it, the function
     looks for the index data and returns it in a Dataframe format
@@ -280,6 +249,7 @@ def get_index_price(name, ticker):
     url_base = "https://raw.githubusercontent.com/NandayDev/MSCI-Historical-Data/main/"
 
     # trying different paths to the find index data
+    response = None
     for url_end in url_list:
         url = createURL(url_base + url_end, name)
         try:
@@ -287,6 +257,10 @@ def get_index_price(name, ticker):
         except:
             continue
         break
+
+    # if no index found return None
+    if response == None:
+        return None
 
     # converting the response data to a pandas Dataframe
     return_data = pd.read_csv(response, sep=",", names=["Date", ticker], skiprows=1)
@@ -297,46 +271,37 @@ def get_index_price(name, ticker):
     return return_data
 
 def get_index_and_etf_data(portfolio_tickers, index_names):
-        '''
-        Given the portfolio_tickers and index_names lists the function gets the correspondant index name of each ETF.
-        Then, it joins the older index data to the newer ETF data month by month, so that we have more historical data
-        for ETFs. It returns the portfolio_prices dataframe with the older index data added to it.
+    '''
+    Given the portfolio_tickers and index_names lists the function gets the correspondant index name of each ETF.
+    Then, it joins the older index data to the newer ETF data month by month (in % change), so that we have more historical data
+    for ETFs. It returns the portfolio_prices dataframe with the older index data added to it.
 
-        Parameters:
-        - portfolio_tickers [List of Strings]
-        - index_names [List of Strings]
+    Parameters:
+    - portfolio_tickers [List of Strings]
+    - index_names [List of Strings]
 
-        Returns:
-        - portfolio_prices [Dataframe]
-        '''
-        portfolio_tickers.append("IBM")
-        index_names.append("")
-        all_stocks = yf.download(portfolio_tickers, interval='1mo')['Open']
-        portfolio_prices = pd.DataFrame()
-        for ticker in portfolio_tickers:
-            price = all_stocks[ticker]
-            portfolio_prices[ticker] = price
+    Returns:
+    - portfolio_prices [Dataframe]
+    '''
+    portfolio_tickers.append("IBM")
+    portfolio_prices = yf.download(portfolio_tickers, interval='1mo')['Open']
+    portfolio_prices = portfolio_prices.pct_change()
 
+    for i in (i for i in range(0,len(index_names)-1) if index_names[i] != ""):
+        ticker = portfolio_tickers[i]
+        return_data = get_index_prices(index_names[i], ticker)
+        return_data[ticker] = return_data[ticker].pct_change()
 
-        for i in range(0,len(portfolio_tickers)):
-            name = index_names[i]
-            if name!="":
-                ticker = portfolio_tickers[i]
-                return_data = get_index_price(name, ticker)
+        for i in range(0,len(return_data)):
+            return_data.loc[i,"Date"] = datetime.strptime(return_data.loc[i,"Date"], '%Y-%m-%d')
 
-                for i in range(0,len(return_data)):
-                        return_data.loc[i,"Date"] = datetime.strptime(return_data.loc[i,"Date"], '%Y-%m-%d')
+        return_data.set_index("Date", inplace = True)
+        portfolio_prices[ticker].fillna(return_data[ticker], inplace = True)
+    
+    portfolio_prices.drop("IBM", axis=1, inplace = True)
+    portfolio_prices.dropna(axis = 0, how = 'all', inplace = True)
 
-                return_data.set_index("Date", inplace = True)
-                portfolio_prices["^"+ticker] = return_data[ticker]
-                first_valid_index = portfolio_prices[ticker].index.get_loc(portfolio_prices[ticker].first_valid_index())
-                portfolio_prices[ticker].fillna(return_data[ticker]*portfolio_prices[ticker][first_valid_index]/portfolio_prices["^"+ticker][first_valid_index], inplace = True)
-                portfolio_prices.drop("^"+ticker, axis=1, inplace = True)
-        
-        portfolio_prices.drop("IBM", axis=1, inplace = True)
-        portfolio_prices.dropna(axis = 0, how = 'all', inplace = True)
-
-        return portfolio_prices
+    return portfolio_prices
 
 def get_first_date_year(all_date):
     '''
@@ -456,6 +421,7 @@ def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, 
 
     return capital_df
     
+# portfolio
 def portfolio_value(stocks_prices, portfolio_weight):
     '''
         This function, named portfolio_value, calculates the portfolio value 

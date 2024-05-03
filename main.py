@@ -1,5 +1,7 @@
 # In questo file sfruttiamo gli helper per prendere un portafogli e mandare a javascript i risultati
 
+from helpers_files.asset_helpers import *
+from helpers_files.portfolio_helpers import *
 from helpers_files.helpers import *
 import time
 import datetime
@@ -56,3 +58,9 @@ for ticker in stocks_prices.columns:
 portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
 
 print(portfolio_performance_df)
+
+
+tickers = ['VUAA.MI', 'EIMI.MI']
+index_names = ["S&P 500", 'MSCI Emerging Markets IMI'] 
+
+print(get_index_and_etf_data(tickers, index_names).to_string())
