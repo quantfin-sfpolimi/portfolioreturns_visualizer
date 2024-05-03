@@ -287,7 +287,7 @@ def get_index_and_etf_data(portfolio_tickers, index_names):
     portfolio_prices = yf.download(portfolio_tickers, interval='1mo')['Open']
     portfolio_prices = portfolio_prices.pct_change()
 
-    for i in (i for i in range(0,len(index_names)-1) if index_names[i] != ""):
+    for i in (i for i in range(0,len(index_names)) if index_names[i] != ""):
         ticker = portfolio_tickers[i]
         return_data = get_index_prices(index_names[i], ticker)
         return_data[ticker] = return_data[ticker].pct_change()

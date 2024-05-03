@@ -7,7 +7,6 @@ import time
 import datetime
 
 
-
 # Futuri input dell'utente, tramite input dal frontend
 tickers = ['SWDA.MI', 'KO']
 weights = [0.5, 0.5]
@@ -15,8 +14,7 @@ start = "2000-01-01"
 end = "2020-04-30"
 initial_amount = 10000.0
 
-
-stocks_prices = download_prices(tickers, start, end, interval='1mo')
+stocks_prices =  yf.download(tickers, start, end, interval='1mo')['Open']
 
 
 # Cambio i timestamp in stringhe per non avere problemi
@@ -37,7 +35,7 @@ for ticker in stocks_prices.columns:
     etf_ter = get_ter(isin)
 
     index_name = get_index_name(isin)
-    index_prices = get_index_price(index_name, ticker)
+    index_prices = get_index_prices(index_name, ticker)
 
     #Sostituisci alla colonna del prezzo le percentuali
     index_prices[ticker] = index_prices[ticker].pct_change()
@@ -58,7 +56,6 @@ for ticker in stocks_prices.columns:
 portfolio_performance_df = portfolio_performance(etf_and_indexes, tickers, weights, merge, start, end, initial_amount)
 
 print(portfolio_performance_df)
-
 
 tickers = ['VUAA.MI', 'EIMI.MI']
 index_names = ["S&P 500", 'MSCI Emerging Markets IMI'] 
