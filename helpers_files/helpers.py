@@ -483,8 +483,12 @@ def MDD(portfolio_prices):
                 Maximum Drawdown (%)
     '''
     value=list(portfolio_prices.values())
-    return ((max(value)-min(value))/max(value))*100
-
+    mdd=0
+    ma=-1
+    for x in value:
+        ma=max(ma, x)
+        mdd=max(mdd, ma-x)
+    return mdd
 
 class PickleHelper:
     def __init__(self, obj):
