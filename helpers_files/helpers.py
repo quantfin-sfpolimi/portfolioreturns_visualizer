@@ -52,7 +52,6 @@ def merge_etf_and_index(arr, start_date, end_date):
                 #Sostituisce nan col valore dell'indice
                 portfolio_assets.at[date, ticker] = current_index_df.at[date, ticker]
     
-
     return portfolio_assets
 
 def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_value, interval='1mo'):
