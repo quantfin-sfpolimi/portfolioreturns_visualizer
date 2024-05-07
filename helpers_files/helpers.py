@@ -421,7 +421,6 @@ def portfolio_return_pac(portfolio_prices, portfolio_tickers, portfolio_weight, 
 
     return capital_df
     
-# portfolio
 def portfolio_value(stocks_prices, portfolio_weight):
     '''
         This function, named portfolio_value, calculates the portfolio value 

@@ -3,14 +3,21 @@
 from helpermodules.portfolio_helpers import *
 from helpermodules.asset_helpers import *
 
-asset1 = Asset("ETF", "VUAA", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
+asset1 = Asset("ETF", "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
 asset1.load()
-
-asset2 = Asset("ETF", "EIMI", "iShares Core MSCI Emerging Markets IMI UCITS ETF (Acc)")
-asset2.load()
-
 asset1.info()
+
+asset2 = Asset("ETF", "EIMI.MI", "iShares Core MSCI Emerging Markets IMI UCITS ETF (Acc)")
+asset2.load()
 asset2.info()
+
+assets = [asset1, asset2]
+portfolio = Portfolio(assets, [0.1, 0.9])
+
+print(portfolio.tickers)
+print(portfolio.index_names)
+print(portfolio.df)
+print(portfolio.portfolio_return_pac(1000, 100, 0.1, True))
 
 # update code using new functions / classes
 """
