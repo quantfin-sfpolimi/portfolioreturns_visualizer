@@ -8,8 +8,6 @@ function performSearch(query, data) {
 
     const result = fuse.search(query);
 
-    console.log(result)
-
     const searchResults = document.getElementById('search-results');
     searchResults.innerHTML = '';
 
