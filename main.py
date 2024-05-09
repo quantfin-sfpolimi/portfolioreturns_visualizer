@@ -3,9 +3,16 @@ import pandas as pd
 from helpermodules.portfolio_helpers import *
 from helpermodules.asset_helpers import *
 
+# Futuri input dell'utente, tramite input dal frontend
+tickers = ['SWDA.MI', 'KO']
+weights = [0.9, 0.1]
+start = "2000-01-01"
+end = "2020-04-30"
+initial_amount = 10000.0
+recurrent_amount = 0
 
-asset1 = Asset("ETF", "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
-asset1.load() #FIXME: what's the format expected for this input?
+asset1 = Asset('ETF', "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
+asset1.load()
 asset1.info()
 
 asset2 = Asset("ETF", "EIMI.MI", "iShares Core MSCI Emerging Markets IMI UCITS ETF (Acc)")
@@ -13,7 +20,7 @@ asset2.load()
 asset2.info()
 
 assets = [asset1, asset2]
-portfolio = Portfolio(assets, [0.3, 0.7])
+portfolio = Portfolio(assets, weights=weights)
 
 print(portfolio.df)
 print(portfolio.portfolio_return_pac(1000, 100, 0.1, True))
