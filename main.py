@@ -3,12 +3,8 @@
 from helpermodules.portfolio_helpers import *
 from helpermodules.asset_helpers import *
 
-startdate = '2010-01-01'
-enddate = '2023-12-01'
-
-asset1 = Asset("ETF", "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
+asset1 = Asset("ETF", "VUAA", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
 asset1.load()
-asset1.info()
 
 asset2 = Asset("ETF", "EIMI.MI", "iShares Core MSCI Emerging Markets IMI UCITS ETF (Acc)")
 asset2.load()
