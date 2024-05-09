@@ -4,7 +4,7 @@ from helpermodules.portfolio_helpers import *
 from helpermodules.asset_helpers import *
 
 asset1 = Asset("ETF", "VUAA", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
-asset1.load()
+asset1.load() #TODO: what's the format expected here? 
 
 asset2 = Asset("ETF", "EIMI", "iShares Core MSCI Emerging Markets IMI UCITS ETF (Acc)")
 asset2.load()
