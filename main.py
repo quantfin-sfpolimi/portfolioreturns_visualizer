@@ -5,7 +5,7 @@ from helpermodules.asset_helpers import *
 
 
 asset1 = Asset("ETF", "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
-asset1.load()
+asset1.load() #FIXME: what's the format expected for this input?
 asset1.info()
 
 asset2 = Asset("ETF", "EIMI.MI", "iShares Core MSCI Emerging Markets IMI UCITS ETF (Acc)")
