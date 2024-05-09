@@ -54,7 +54,7 @@ def merge_etf_and_index(arr, start_date, end_date):
     
     return portfolio_assets
 
-def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_value, interval='1mo'):
+def portfolio_performance(df_arr, tickers, weights, merge, start, end, initial_value):
     """
     Calculate the performance of a portfolio over a specified time period.
 
