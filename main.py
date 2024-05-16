@@ -12,9 +12,7 @@ asset2.load()
 assets = [asset1, asset2]
 portfolio = Portfolio(assets, [0.3, 0.7])
 
-'''
 print(portfolio.df)
 print(portfolio.portfolio_return_pac(1000, 100, 0.1, True,startdate="2009-10-01", enddate="2018-09-09" ))
 print(portfolio.monthly_portfolio_return().to_string())
 print(portfolio.graph_returns_frequency())
-'''
