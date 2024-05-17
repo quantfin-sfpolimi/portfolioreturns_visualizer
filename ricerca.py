@@ -4,13 +4,14 @@ import pandas as pd
 import time
  
 file = open("all.txt", "w")
-options = Options()
-options.add_argument("--headless")
-browser = webdriver.Chrome(options=options)
-# not showing browser GUI (makes code much faster)
  
 def load_index_name(isin):
         url="https://www.justetf.com/it/etf-profile.html?isin=" + isin
+        
+        options = Options()
+        options.add_argument("--headless")
+        browser = webdriver.Chrome(options=options)
+        # not showing browser GUI (makes code much faster)
 
         browser.get(url)
  
@@ -27,7 +28,7 @@ def load_index_name(isin):
                 letter = html[index]
             except:
                 print("Error")
-                time.sleep(180)
+                time.sleep(300)
                 browser.close()
                 load_index_name(isin)
                 return ""
@@ -35,7 +36,7 @@ def load_index_name(isin):
                 index_name+=letter
             if letter == '&':
                 index += 4
-                
+ 
         index = html.find('id="etf-second-id">',1) + 18
 
         ticker=""
@@ -46,7 +47,6 @@ def load_index_name(isin):
             letter = html[index]
             if letter != '<':
                 ticker+=letter
-        
         browser.close()
         print(index_name+" ("+ticker+")")
         return index_name+" ("+ticker+")"
