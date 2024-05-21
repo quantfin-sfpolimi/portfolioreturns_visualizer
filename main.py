@@ -22,6 +22,9 @@ portfolio = Portfolio(assets, weights)
 
 
 #print(portfolio.df)
-print(portfolio.portfolio_return_pac(1000, 0, 0, True, startdate="2020-01-01", enddate="2022-01-01"))
+#print(portfolio.portfolio_return_pac(1000, 0, 0, True, startdate="2020-01-01", enddate="2022-01-01"))
 #print(portfolio.monthly_portfolio_return().to_string())
 #print(portfolio.graph_returns_frequency())
+
+
+
