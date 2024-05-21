@@ -1,19 +1,21 @@
 // Funzione per eseguire la ricerca fuzzy e visualizzare i risultati
 function performSearch(query, data) {
     const fuse = new Fuse(data, {
-        keys : ['ISIN', 'FUNDNAME'],
+        keys : ['ISIN', 'FUNDNAME', 'TICKER'],
         includeScore: true,
         threshold: 0.3
     });
 
     const result = fuse.search(query);
 
+    console.log(result)
+
     const searchResults = document.getElementById('search-results');
     searchResults.innerHTML = '';
 
     result.forEach(item => {
         const div = document.createElement('div');
-        div.textContent = `ISIN: ${item.item.ISIN}, FUNDNAME: ${item.item.FUNDNAME}, Score: ${item.score.toFixed(2)}`;
+        div.textContent = `ISIN: ${item.item.ISIN}, FUNDNAME: ${item.item.FUNDNAME},  TICKER: ${item.item.TICKER}`;
         searchResults.appendChild(div);
     });
 }
