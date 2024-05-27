@@ -97,12 +97,15 @@ def portfolio_value(tickers, weights, start_date, end_date, initial_amount, recu
         nan_df = fill_with_nan(df, tickers, start_date)
         frames = [nan_df, df]
         df = pd.concat(frames)
-        
+    
+    '''
+    TO BE COMPLETED
     for ticker in tickers:
         if df.loc[start_date, ticker] != df.loc[start_date, ticker]:
         if ticker == 'SPY':
             df = _merge_single_etf(ticker, start_date, df)
         #Chiama merge per quel ticker
+    '''
 
 
     # Useful variables
