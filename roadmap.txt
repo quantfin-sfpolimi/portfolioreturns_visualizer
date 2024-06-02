@@ -1,0 +1,24 @@
+main.py roadmap:
+
+1. Create Instance of Asset class. For example:
+
+asset1 = Asset("ETF", "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
+
+2. Load the Asset isin, dataframe, index name and ter attributes with the function load():
+asset1.load()
+
+If the asset is an ETF, the load() function calls the load_etf_isin(), load_index_name() and load_ter() functions, which update the corresponding attributes.
+The load() function then calls the load_df() function, which sets the Asset.df attribute equal to a pandas dataframe with the asset data. If the asset is an ETF and the corresponding index data is available, it also merges the two dataframes.
+
+3. You can create a portfolio using the Portfolio class. For example:
+
+my_portfolio = Portfolio(assets, weights)
+
+where assets is a list of Asset objects and weights is a list of floats. The i-th float in the weights list corresponds to the weight of the i-th Asset in the portfolio. (Total sum should be 1)
+
+Useful functions the portfolio class has:
+- MDD (Maximum Drawdown): it computes the maximum drawdown the portfolio would have had in a given period of time
+- annual_portfolio_return: outputs a pandas dataframe with the portfolio annual portfolio return
+- monthly_portfolio_return: outputs a pandas dataframe with the portfolio monthly portfolio return
+- portfolio_return_pac: outputs a pandas dataframe with the monthly return and capital you would have had if you invested x amount at a certain point in time and contributed each month with a different amount. You can also set broker's fees for each transaction
+- graph_returns_frequency: the function graphs the annual return frequency of the portfolio

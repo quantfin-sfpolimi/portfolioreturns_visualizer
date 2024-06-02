@@ -4,17 +4,28 @@ from helpermodules.portfolio_helpers import *
 from helpermodules.asset_helpers import *
 
 asset1 = Asset("ETF", "VUAA.MI", "Vanguard S&P 500 UCITS ETF (USD) Accumulating")
-asset1.load()
+asset1.index_name = 'S&P 500'
+asset1.isin = 'IE00BFMXXD54'
+asset1.ter = 0.07
+asset1.load_df()
 
 asset2 = Asset("ETF", "EIMI.MI", "MSCI Emerging Markets IMI")
-asset2.load()
+asset2.index_name = 'MSCI Emerging Markets'
+asset2.isin = 'IE00BKM4GZ66'
+asset2.ter = 0.18
+asset2.load_df()
 
 
 assets = [asset1, asset2]
-portfolio = Portfolio(assets, [0.3, 0.7])
+weights = [0.5, 0.5]
+portfolio = Portfolio(assets, weights)
 
 
 print(portfolio.df)
-print(portfolio.portfolio_return_pac(1000, 100, 0.1, True,startdate="2016-10-01", enddate="2022-09-01" ))
+print('Maximum drawdown: ', portfolio.MDD('1990-01-01', '2023-01-01'))
+print(portfolio.portfolio_return_pac(1000, 0, 0, True, startdate="2020-01-01", enddate="2022-01-01"))
 print(portfolio.monthly_portfolio_return().to_string())
 print(portfolio.graph_returns_frequency())
+
+
+
